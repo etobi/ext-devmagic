@@ -1,0 +1,9 @@
+                '{property.key}' => array(
+                        'exclude' => 0,
+                        'label' => 'LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.{property.key}',
+                        'config' => array(
+                                'type' => 'select',
+                                'foreign_table' => '{property.relationModel.tableName}',
+                                'foreign_table_where' => ' ORDER BY uid'
+                        )
+                ),

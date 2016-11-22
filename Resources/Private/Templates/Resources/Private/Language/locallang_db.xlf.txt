@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="" product-name="{file.extensionName}">
+		<header/>
+		<body>
+<f:for each="{file.models}" as="model">
+			<trans-unit id="{model.tableName}">
+				<source>{model.name}</source>
+			</trans-unit>
+<f:for each="{model.properties}" as="property">
+			<trans-unit id="{model.tableName}.{property.key}">
+				<source><f:if condition="{property.label}" then="{property.label}" else="{property.name}" /></source>
+			</trans-unit>
+</f:for></f:for>
+		</body>
+	</file>
+</xliff>

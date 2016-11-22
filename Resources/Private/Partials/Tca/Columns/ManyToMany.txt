@@ -1,0 +1,22 @@
+                '{property.key}' => array(
+                        'exclude' => 0,
+                        'label' => 'LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.{property.key}',
+                        'config' => array(
+                                'type' => 'group',
+                                'internal_type' => 'db',
+                                'allowed' => '{property.relationModel.tableName}',
+                                'MM' => '{property.relationMMTable}',
+
+                                'foreign_table' => '{property.relationModel.tableName}',
+
+                                'minitems' => 0,
+                                'maxitems' => 99,
+                                'size' => 5,
+                                'show_thumbs' => false,
+                                'wizards' => array(
+                                        'suggest' => array(
+                                                'type' => 'suggest',
+                                        ),
+                                ),
+                        )
+                ),

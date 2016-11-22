@@ -1,79 +1,89 @@
 <?php
 namespace Etobi\Devmagic\Service;
 
+use Etobi\Devmagic\Domain\Model\File\ConfigurationTcaFile;
+use Etobi\Devmagic\Domain\Model\File\ExtTablesSqlFile;
+use Etobi\Devmagic\Domain\Model\File\LocallangDbFile;
 use Etobi\Devmagic\Domain\Model\Model;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class BuildService implements SingletonInterface
 {
-
-    protected $templateRootPaths = 'EXT:devmagic/Resources/Private/Templates/Devmagic';
-
     /**
      * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
      * @inject
      */
     protected $objectManager;
 
-    /**
-     * @param Model $model
-     * @return string
-     */
-    public function buildTcaForModel($model)
-    {
-        $tcaContent = $this->renderView('Model/Tca', array(
-                'model' => $model
-        ));
-        return $tcaContent;
-    }
+    protected $models = [];
 
     /**
-     * @param string $templateName
-     * @param array $variables
-     * @return string
-     */
-    private function renderView($templateName, $variables)
-    {
-        /** @var $view \TYPO3\CMS\Fluid\View\StandaloneView */
-        $view = $this->objectManager->get(\TYPO3\CMS\Fluid\View\StandaloneView::class);
-        $view->setFormat('txt');
-        $templateFilepath = $this->getFirstExistingFileInPaths($templateName . '.txt');
-        $view->setTemplatePathAndFilename($templateFilepath);
-        $view->assignMultiple($variables);
-        return $view->render();
-    }
-
-    /**
-     * Resolves the defined template path(s) to absolute paths.
-     *
+     * @param string $extensionName
      * @return array
      */
-    private function resolveTemplateRootPaths()
+    public function buildFilesFromModels($vendorName, $extensionName)
     {
-        $rootPaths = GeneralUtility::trimExplode(',', $this->templateRootPaths);
+        $files = [];
+        $modelClassNames = $this->getClassesInNamespace(
+                '\\' . $vendorName .
+                '\\' . GeneralUtility::underscoredToUpperCamelCase($extensionName) .
+                '\\Domain\\Model');
 
-        foreach ($rootPaths as &$path) {
-            $path = GeneralUtility::getFileAbsFileName($path);
+        /** @var LocallangDbFile $locallandDbFile */
+        $locallandDbFile = $this->objectManager->get(LocallangDbFile::class);
+        $locallandDbFile->setExtensionName($extensionName);
+        $files[] = $locallandDbFile;
+
+        /** @var ExtTablesSqlFile $extTablesSql */
+        $extTablesSql = $this->objectManager->get(ExtTablesSqlFile::class);
+        $extTablesSql->setExtensionName($extensionName);
+        $files[] = $extTablesSql;
+
+        foreach ($modelClassNames as $modelClassName) {
+            $model = $this->getModelForClassname($modelClassName);
+            /** @var ConfigurationTcaFile $tcaFile */
+            $tcaFile = $this->objectManager->get(ConfigurationTcaFile::class);
+            $tcaFile->setExtensionName($extensionName);
+            $tcaFile->setModel($model);
+            $files[] = $tcaFile;
+
+            $locallandDbFile->addModel($model);
+            $extTablesSql->addModel($model);
         }
 
-        return $rootPaths;
+        return $files;
     }
 
     /**
-     * Checks the list of folders if they contain a file with the given name and returns the first existing file’s path.
-     *
-     * @param string $fileName
-     * @return NULL|string
+     * @param string $namespace
+     * @return array
      */
-    private function getFirstExistingFileInPaths($fileName)
+    public function getClassesInNamespace($namespace)
     {
-        foreach ($this->resolveTemplateRootPaths() as $path) {
-            $path = rtrim($path, '/') . '/';
-            if (file_exists($path . $fileName)) {
-                return $path . $fileName;
-            }
+        list($vendor, $extensionNamespace, $fragments) = GeneralUtility::trimExplode('\\', $namespace, true, 3);
+        $extensionName = GeneralUtility::camelCaseToLowerCaseUnderscored($extensionNamespace);
+
+        $files = scandir(GeneralUtility::getFileAbsFileName('EXT:' . $extensionName . '/Classes/' . str_replace('\\', '/', $fragments)));
+
+        $classes = array_map(function ($file) use ($namespace) {
+            return $namespace . '\\' . str_replace('.php', '', $file);
+        }, $files);
+
+        return array_filter($classes, function ($possibleClass) {
+            return class_exists($possibleClass);
+        });
+    }
+
+    /**
+     * @param string $className
+     * @return Model
+     */
+    public function getModelForClassname($className)
+    {
+        if (!$this->models[$className]) {
+            $this->models[$className] = $this->objectManager->get(\Etobi\Devmagic\Domain\Model\Model::class, $className);
         }
-        return null;
+        return $this->models[$className];
     }
 }

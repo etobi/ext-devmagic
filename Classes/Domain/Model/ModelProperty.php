@@ -2,9 +2,22 @@
 namespace Etobi\Devmagic\Domain\Model;
 
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Reflection\ClassSchema;
 
 class ModelProperty
 {
+
+    /**
+     * @var \TYPO3\CMS\Extbase\Reflection\ReflectionService
+     * @inject
+     */
+    protected $reflectionService;
+
+    /**
+     * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
+     * @inject
+     */
+    protected $objectManager;
 
     /**
      * @var string
@@ -42,12 +55,57 @@ class ModelProperty
     protected $cascade;
 
     /**
+     * @var Model
+     */
+    protected $model;
+
+    /**
+     * @var Model
+     */
+    protected $relationModel;
+
+    /**
+     * @var \Etobi\Devmagic\Service\BuildService
+     * @inject
+     */
+    protected $buildService;
+
+    /**
+     * @var string
+     */
+    protected $tcaColumnType;
+
+    /**
+     * @var string
+     */
+    protected $label;
+
+    /**
      * @param string $name
      */
     public function setName($name)
     {
         $this->name = $name;
         $this->key = GeneralUtility::camelCaseToLowerCaseUnderscored($name);
+
+        if ($this->reflectionService->isPropertyTaggedWith($this->model->getClassName(), $name, 'devmagic')) {
+            $tags = $this->reflectionService->getPropertyTagValues($this->model->getClassName(), $name, 'devmagic');
+            foreach ($tags as $tag) {
+                list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
+                switch (strtolower($key)) {
+                    case 'tca':
+                        $this->tcaColumnType = strtolower(trim($value));
+                        break;
+                    case 'label':
+                        $this->label = trim($value);
+                        break;
+                }
+            }
+            // label
+            // label_alt
+            // fileType: image, pdf, any
+            // string: text
+        }
     }
 
     /**
@@ -56,6 +114,22 @@ class ModelProperty
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLabel()
+    {
+        return $this->label;
+    }
+
+    /**
+     * @param string $label
+     */
+    public function setLabel($label)
+    {
+        $this->label = $label;
     }
 
     public function setSchema($schema) {
@@ -157,12 +231,99 @@ class ModelProperty
     /**
      * @return string
      */
-    public function getTcaColumnType() {
-        switch ($this->type) {
+    public function getTcaColumnPartialName() {
+        switch ($this->tcaColumnType ?: $this->type) {
+            case 'text':
+                return 'Text';
+
+            case 'inline':
+                return 'Inline';
+
             case 'string':
-                return 'InputString';
+                return 'String';
+
+            case 'boolean':
+                return 'Checkbox';
+
+            case 'DateTime':
+                return 'DateTime';
+
+            case 'TYPO3\CMS\Extbase\Domain\Model\FileReference':
+                return 'File';
+
+            case 'array':
+            case 'TYPO3\CMS\Extbase\Persistence\ObjectStorage':
+                if ($this->elementType == 'TYPO3\CMS\Extbase\Domain\Model\FileReference') {
+                    return 'Files';
+                }
+
+                if ($this->isRelation() && $this->getRelationModel()->getTableName() == 'sys_category') {
+                    return 'SysCategory';
+                }
+
+                return 'ManyToMany';
+
             default:
-                return 'InputString';
+                if ($this->isRelation()) {
+                    return 'OneToOne';
+                }
+
+                return 'String';
         }
+    }
+
+    public function getRelationMMTable()
+    {
+        if ($this->getTcaColumnPartialName() != 'ManyToMany') {
+            return null;
+        }
+        return 'tx_' .
+            str_replace('_', '', $this->model->getExtensionKey()) .
+            '_' .
+            strtolower($this->model->getName()) .
+            '_' .
+            strtolower($this->getRelationModel()->getName()) .
+            '_mm';
+    }
+
+    public function getSqlColumnDefinition()
+    {
+        // TODO
+        return 'varchar(255) DEFAULT \'\' NOT NULL';
+    }
+
+    /**
+     * @param Model $model
+     */
+    public function setModel($model)
+    {
+        $this->model = $model;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isRelation()
+    {
+        if (class_exists($this->elementType ?: $this->type)) {
+            $classSchema = $this->reflectionService->getClassSchema($this->elementType ?: $this->type);
+            return ($classSchema->getModelType() == ClassSchema::MODELTYPE_ENTITY);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @return Model
+     */
+    public function getRelationModel()
+    {
+        if (!$this->isRelation()) {
+            return null;
+        }
+        if (!$this->relationModel) {
+            $this->relationModel = $this->buildService->getModelForClassname($this->elementType ?: $this->type);
+        }
+        return $this->relationModel;
     }
 }

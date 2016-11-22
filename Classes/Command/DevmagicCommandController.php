@@ -1,8 +1,8 @@
 <?php
 namespace Etobi\Devmagic\Command;
 
+use Etobi\Devmagic\Domain\Model\File\AbstractFile;
 use Etobi\Devmagic\Domain\Model\Model;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\CommandController;
 
 class DevmagicCommandController extends CommandController
@@ -19,26 +19,17 @@ class DevmagicCommandController extends CommandController
      * @param string $modelClassName
      * @throws \Exception
      */
-    public function buildTcaFromModelCommand($extensionName, $modelClassName)
+    public function buildFromModelsCommand($vendorName, $extensionName)
     {
         $this->outputLine('Build TCA from model');
-        $this->outputLine('Extension: ' . $extensionName);
-        $this->outputLine('Model: ' . $modelClassName);
+        $this->outputLine('Extension: ' . $vendorName . ' ' . $extensionName);
 
-        /** @noinspection PhpMethodParametersCountMismatchInspection */
-        /** @var Model $model */
-        $model = $this->objectManager->get(\Etobi\Devmagic\Domain\Model\Model::class, $modelClassName);
-        $content = $this->buildService->buildTcaForModel($model);
-
-        $targetPath = 'EXT:' . $extensionName . '/Configuration/TCA/' . $model->getTableName() . '.php';
-        $this->outputLine('Target file: ' . $targetPath);
-        $targetAbsolutePath = GeneralUtility::getFileAbsFileName($targetPath);
-        if (file_exists($targetAbsolutePath)) {
-//            throw new \Exception('TCA target file ' . $targetPath . ' already exists', 1479741882);
+        $files = $this->buildService->buildFilesFromModels($vendorName, $extensionName);
+        /** @var AbstractFile $file */
+        foreach ($files as $file) {
+            $this->outputLine($file->getPath());
+            $file->write();
         }
-
-        GeneralUtility::mkdir_deep(dirname($targetAbsolutePath));
-        file_put_contents($targetAbsolutePath, $content);
     }
 
 

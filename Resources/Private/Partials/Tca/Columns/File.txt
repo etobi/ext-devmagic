@@ -1,0 +1,35 @@
+                '{property.key}' => array(
+                        'exclude' => 0,
+                        'label' => 'LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.{property.key}',
+                        'config' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getFileFieldTCAConfig(
+                                '{property.key}',
+                                array(
+                                        'foreign_selector_fieldTcaOverride' => array(
+                                                'config' => array(
+                                                        'appearance' => array(
+                                                                'elementBrowserType' => 'file',
+                                                                'elementBrowserAllowed' => $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
+                                                        )
+                                                )
+                                        ),
+                                        'appearance' => array(
+                                                'createNewRelationLinkTitle' => "Add",
+                                                'headerThumbnail' => array(
+                                                        'width' => '100m',
+                                                        'height' => '100',
+                                                ),
+                                        ),
+                                        'minitems' => 0,
+                                        'maxitems' => 1,
+                                        'foreign_types' => array(
+                                                '0' => array(
+                                                        'showitem' => '--palette--;LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.imageoverlayPalette;imageoverlayPalette,--palette--;;filePalette'
+                                                ),
+                                                \TYPO3\CMS\Core\Resource\File::FILETYPE_IMAGE => array(
+                                                        'showitem' => '--palette--;LLL:EXT:lang/locallang_tca.xlf:sys_file_reference.imageoverlayPalette;imageoverlayPalette,--palette--;;filePalette'
+                                                ),
+                                        )
+                                ),
+                                $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
+                        )
+                ),

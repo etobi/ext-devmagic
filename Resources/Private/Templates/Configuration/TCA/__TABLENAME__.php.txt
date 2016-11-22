@@ -1,0 +1,49 @@
+<?php
+if (!defined('TYPO3_MODE')) {
+    die('Access denied.');
+}
+
+return array(
+        'ctrl' => array(
+                'title' => 'LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}',
+                'label' => '{file.model.labelPropertyName}',
+                'label_alt' => 'uid',
+                'label_alt_force' => true,
+                'tstamp' => 'tstamp',
+                'crdate' => 'crdate',
+                'cruser_id' => 'cruser_id',
+                'dividers2tabs' => true,
+                'languageField' => 'sys_language_uid',
+                'transOrigPointerField' => 'l10n_parent',
+                'transOrigDiffSourceField' => 'l10n_diffsource',
+                'delete' => 'deleted',
+                'enablecolumns' => array(
+                        'disabled' => 'hidden',
+                        'starttime' => 'starttime',
+                        'endtime' => 'endtime',
+                ),
+                <f:if condition="{file.model.hideTable}">'hideTable' => true,
+                </f:if>'default_sortby' => 'ORDER BY uid',
+                'searchFields' => '{file.model.labelPropertyName}',
+                'iconfile' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('{file.model.extensionKey}') . 'Resources/Public/Icons/{file.model.tableName}.gif',
+        ),
+
+        'interface' => array(
+                'showRecordFieldList' => '',
+        ),
+
+        'types' => array(
+                '1' => array(
+                        'showitem' => '--div--;LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.tab.default, ' .
+<f:for each="{file.model.properties}" as="property" iteration="loop">                        '{property.key}<f:if condition="{loop.isLast}" then="" else=", " />'<f:if condition="{loop.isLast}" then="" else=" ." />
+</f:for>
+                ),
+        ),
+
+        'palettes' => array(),
+
+        'columns' => array(
+<f:for each="{file.model.properties}" as="property"><f:render partial="Tca/Columns/{property.tcaColumnPartialName}.txt" arguments="{_all}" />
+</f:for>
+        )
+);

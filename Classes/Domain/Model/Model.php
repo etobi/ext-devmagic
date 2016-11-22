@@ -55,6 +55,26 @@ class Model
     protected $properties;
 
     /**
+     * @var string
+     */
+    protected $className;
+
+    /**
+     * @var string
+     */
+    protected $name;
+
+    /**
+     * @var string
+     */
+    protected $labelPropertyName;
+
+    /**
+     * @var bool
+     */
+    protected $hideTable = false;
+
+    /**
      * @param string $className
      */
     public function __construct($className)
@@ -66,8 +86,26 @@ class Model
     {
         $explodedNamespace = GeneralUtility::trimExplode('\\', $this->className, true, 3);
         $this->extensionKey = GeneralUtility::camelCaseToLowerCaseUnderscored($explodedNamespace[1]);
+        $explodedNamespace = GeneralUtility::revExplode('\\', $this->className, 2);
+        $this->name = $explodedNamespace[1];
         $this->classSchema = $this->buildClassSchema($this->className);
         $this->dataMap = $this->buildDataMap($this->className);
+
+        $tags = $this->reflectionService->getClassTagsValues($this->getClassName());
+        if ($tags['devmagic']) {
+            foreach ($tags['devmagic'] as $tag) {
+                list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
+                echo $key;
+                switch (strtolower($key)) {
+                    case 'hidetable':
+                        $this->hideTable = true;
+                        break;
+                    case 'label':
+                        $this->name = trim($value);
+                        break;
+                }
+            }
+        }
     }
 
     /**
@@ -103,6 +141,14 @@ class Model
     }
 
     /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
      * return array
      */
     public function getProperties()
@@ -116,23 +162,23 @@ class Model
 
 
     /**
-     * @param string $modelClassName
+     * @param string $className
      * @return ClassSchema
      * @throws \Exception
      */
-    private function buildClassSchema($modelClassName)
+    private function buildClassSchema($className)
     {
-        if (!class_exists($modelClassName)) {
-            throw new \Exception('Class "' . $modelClassName . '" does not exist', 1454585729);
+        if (!class_exists($className)) {
+            throw new \Exception('Class "' . $className . '" does not exist', 1454585729);
         }
 
-        $schema = $this->reflectionService->getClassSchema($modelClassName);
+        $classSchema = $this->reflectionService->getClassSchema($className);
 
-        if ($schema->getModelType() !== ClassSchema::MODELTYPE_ENTITY) {
-            throw new \Exception('Class "' . $modelClassName . '" must be of entity model type', 1454585947);
+        if ($classSchema->getModelType() !== ClassSchema::MODELTYPE_ENTITY) {
+            throw new \Exception('Class "' . $className . '" must be of entity model type', 1454585947);
         }
 
-        return $schema;
+        return $classSchema;
     }
 
     /**
@@ -147,14 +193,45 @@ class Model
     private function buildPropertiesArray()
     {
         $this->properties = array();
-        foreach ($this->getClassSchema()->getProperties() as $name => $schema) {
+        $classSchema = $this->getClassSchema();
+        foreach ($classSchema->getProperties() as $name => $schema) {
             if (!in_array($name, $this->propertyNamesToIgnore)) {
+
+                if (!$this->labelPropertyName) {
+                    $this->labelPropertyName = $name;
+                }
+
                 /** @var ModelProperty $property */
                 $property = $this->objectManager->get(ModelProperty::class);
+                $property->setModel($this);
                 $property->setName($name);
                 $property->setSchema($schema);
                 $this->properties[$name] = $property;
             }
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->className;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLabelPropertyName()
+    {
+        return $this->labelPropertyName ?: 'uid';
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isHideTable()
+    {
+        return $this->hideTable;
     }
 }
