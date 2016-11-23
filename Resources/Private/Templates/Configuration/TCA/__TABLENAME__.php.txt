@@ -8,7 +8,7 @@ return array(
                 'title' => 'LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}',
                 'label' => '{file.model.labelPropertyName}',
                 'label_alt' => 'uid',
-                'label_alt_force' => true,
+                // 'label_alt_force' => true,
                 'tstamp' => 'tstamp',
                 'crdate' => 'crdate',
                 'cruser_id' => 'cruser_id',
@@ -25,7 +25,7 @@ return array(
                 <f:if condition="{file.model.hideTable}">'hideTable' => true,
                 </f:if>'default_sortby' => 'ORDER BY uid',
                 'searchFields' => '{file.model.labelPropertyName}',
-                'iconfile' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('{file.model.extensionKey}') . 'Resources/Public/Icons/{file.model.tableName}.gif',
+                'iconfile' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('{file.model.extensionKey}') . 'Resources/Public/Icons/{file.model.tableName}.png',
         ),
 
         'interface' => array(

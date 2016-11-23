@@ -274,22 +274,44 @@ class ModelProperty
 
     public function getRelationMMTable()
     {
-        if ($this->getTcaColumnPartialName() != 'ManyToMany') {
+        if ($this->getTcaColumnPartialName() != 'ManyToMany' && $this->getTcaColumnPartialName() != 'Inline') {
             return null;
         }
+        list($_, $table1) = GeneralUtility::revExplode('_', $this->model->getTableName(), 2);
+        list($_, $table2) = GeneralUtility::revExplode('_', $this->getRelationModel()->getTableName(), 2);
         return 'tx_' .
             str_replace('_', '', $this->model->getExtensionKey()) .
             '_' .
-            strtolower($this->model->getName()) .
+            $table1 .
             '_' .
-            strtolower($this->getRelationModel()->getName()) .
+            $table2 .
             '_mm';
     }
 
     public function getSqlColumnDefinition()
     {
-        // TODO
-        return 'varchar(255) DEFAULT \'\' NOT NULL';
+        $tcaColumnPartialName = $this->getTcaColumnPartialName();
+        switch ($tcaColumnPartialName) {
+            case 'Text':
+                $sql = 'text NOT NULL';
+                break;
+            case 'SysCategory':
+            case 'OneToOne':
+            case 'ManyToMany':
+            case 'Inline':
+            case 'Files':
+            case 'File':
+            case 'DateTime':
+                $sql = 'int(11) unsigned DEFAULT \'0\' NOT NULL';
+                break;
+            case 'Checkbox':
+                $sql = 'tinyint(1) unsigned DEFAULT \'0\' NOT NULL';
+                break;
+            default:
+                $sql = 'varchar(255) DEFAULT \'\' NOT NULL';
+                break;
+        }
+        return $sql;
     }
 
     /**

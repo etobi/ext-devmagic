@@ -4,14 +4,15 @@
                         'config' => array(
                                 'type' => 'inline',
                                 'foreign_table' => '{property.relationModel.tableName}',
-                                'foreign_field' => '{property.key}',
+                                'MM' => '{property.relationMMTable}',
                                 'maxitems' => 9999,
                                 'appearance' => array(
-                                        'collapseAll' => 1,
+                                        'collapseAll' => false,
                                         'levelLinksPosition' => 'top',
                                         'showSynchronizationLink' => 1,
                                         'showPossibleLocalizationRecords' => 1,
-                                        'showAllLocalizationLink' => 1
+                                        'showAllLocalizationLink' => 1,
+                                        'newRecordLinkTitle' => 'LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.{property.key}.new'
                                 ),
                         )
                 ),

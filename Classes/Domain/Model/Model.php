@@ -95,7 +95,6 @@ class Model
         if ($tags['devmagic']) {
             foreach ($tags['devmagic'] as $tag) {
                 list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
-                echo $key;
                 switch (strtolower($key)) {
                     case 'hidetable':
                         $this->hideTable = true;

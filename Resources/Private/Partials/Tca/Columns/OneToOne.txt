@@ -4,6 +4,9 @@
                         'config' => array(
                                 'type' => 'select',
                                 'foreign_table' => '{property.relationModel.tableName}',
-                                'foreign_table_where' => ' ORDER BY uid'
+                                'foreign_table_where' => ' ORDER BY uid',
+                                'items' => array(
+                                        array('', 0)
+                                ),
                         )
                 ),
