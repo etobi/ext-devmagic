@@ -361,4 +361,18 @@ class ModelProperty
     {
         return $this->config;
     }
+
+    /**
+     * @return string
+     */
+    public function getTabLabel() {
+        return $this->config['tab'] ?: '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getTabKey() {
+        return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $this->getTabLabel()));
+    }
 }

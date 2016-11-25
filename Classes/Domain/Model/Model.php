@@ -151,6 +151,21 @@ class Model
         return $this->properties;
     }
 
+    public function getTabs()
+    {
+        $tabs = array();
+        /** @var ModelProperty $property */
+        foreach ($this->getProperties() as $property) {
+            if ($property->getTabKey() && !isset($tabs[$property->getTabKey()])) {
+                $tabs[$property->getTabKey()] = array(
+                        'key' => $property->getTabKey(),
+                        'label' => $property->getTabLabel()
+                );
+            }
+        }
+        return $tabs;
+    }
+
 
     /**
      * @param string $className

@@ -7,16 +7,19 @@
 			<trans-unit id="{model.tableName}">
 				<source>{model.title}</source>
 			</trans-unit>
-<f:for each="{model.properties}" as="property">
-			<trans-unit id="{model.tableName}.{property.key}">
+			<trans-unit id="{model.tableName}.tab.default">
+				<source>{model.title}</source>
+			</trans-unit>
+<f:for each="{model.tabs}" as="tab">			<trans-unit id="{model.tableName}.tab.{tab.key}">
+				<source>{tab.label}</source>
+			</trans-unit>
+</f:for><f:for each="{model.properties}" as="property">			<trans-unit id="{model.tableName}.{property.key}">
 				<source><f:if condition="{property.label}" then="{property.label}" else="{property.name}" /></source>
 			</trans-unit>
-			<f:if condition="{property.tcaColumnPartialName} == 'Inline'">
-				<trans-unit id="{model.tableName}.{property.key}.new">
-					<source>Hinzufügen</source>
-				</trans-unit>
-			</f:if>
-</f:for></f:for>
+<f:if condition="{property.tcaColumnPartialName} == 'Inline'">			<trans-unit id="{model.tableName}.{property.key}.new">
+				<source>Hinzufügen</source>
+			</trans-unit>
+</f:if></f:for></f:for>
 		</body>
 	</file>
 </xliff>

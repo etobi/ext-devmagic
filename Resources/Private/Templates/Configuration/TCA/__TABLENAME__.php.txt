@@ -37,8 +37,9 @@ return array(
         'types' => array(
                 '1' => array(
                         'showitem' => '--div--;LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.tab.default, ' .
-<f:for each="{file.model.properties}" as="property" iteration="loop">                        '{property.key}<f:if condition="{loop.isLast}" then="" else=", " />'<f:if condition="{loop.isLast}" then="" else=" ." />
-</f:for>
+<f:groupedFor each="{file.model.properties}" as="groupedProperties" groupBy="tabKey" groupKey="tabKey"><f:if condition="{tabKey}">                               '--div--;LLL:EXT:{file.model.extensionKey}/Resources/Private/Language/locallang_db.xlf:{file.model.tableName}.tab.{tabKey}, ' .
+</f:if><f:for each="{groupedProperties}" as="property" iteration="loop">                               '{property.key},' .
+</f:for></f:groupedFor>                               ''
                 ),
         ),
 
