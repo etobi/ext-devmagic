@@ -5,7 +5,7 @@
 		<body>
 <f:for each="{file.models}" as="model">
 			<trans-unit id="{model.tableName}">
-				<source>{model.name}</source>
+				<source>{model.title}</source>
 			</trans-unit>
 <f:for each="{model.properties}" as="property">
 			<trans-unit id="{model.tableName}.{property.key}">

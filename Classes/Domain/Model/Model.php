@@ -75,6 +75,11 @@ class Model
     protected $hideTable = false;
 
     /**
+     * @var array
+     */
+    protected $config = array();
+
+    /**
      * @param string $className
      */
     public function __construct($className)
@@ -91,20 +96,7 @@ class Model
         $this->classSchema = $this->buildClassSchema($this->className);
         $this->dataMap = $this->buildDataMap($this->className);
 
-        $tags = $this->reflectionService->getClassTagsValues($this->getClassName());
-        if ($tags['devmagic']) {
-            foreach ($tags['devmagic'] as $tag) {
-                list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
-                switch (strtolower($key)) {
-                    case 'hidetable':
-                        $this->hideTable = true;
-                        break;
-                    case 'label':
-                        $this->name = trim($value);
-                        break;
-                }
-            }
-        }
+        $this->parseDevmagicTags();
     }
 
     /**
@@ -142,9 +134,9 @@ class Model
     /**
      * @return string
      */
-    public function getName()
+    public function getTitle()
     {
-        return $this->name;
+        return $this->config['tca']['ctrl']['title'] ?: $this->name;
     }
 
     /**
@@ -223,7 +215,7 @@ class Model
      */
     public function getLabelPropertyName()
     {
-        return $this->labelPropertyName ?: 'uid';
+        return $this->labelPropertyName ?: $this->config['tca']['ctrl']['label'] ?: 'uid';
     }
 
     /**
@@ -232,5 +224,35 @@ class Model
     public function isHideTable()
     {
         return $this->hideTable;
+    }
+
+    private function parseDevmagicTags()
+    {
+        $tags = $this->reflectionService->getClassTagValues($this->getClassName(), 'devmagic');
+        foreach ($tags as $tag) {
+            list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
+            $config = $this->parseDevmagicTag($key, $value);
+
+            $this->config = \TYPO3\CMS\Extbase\Utility\ArrayUtility::arrayMergeRecursiveOverrule($this->config, $config);
+        }
+    }
+
+    private function parseDevmagicTag($key, $value)
+    {
+        if (strpos($key, '.') !== false) {
+            list($firstKey, $remainingKeys) = GeneralUtility::trimExplode('.', $key, true, 2);
+            $config[$firstKey] = $this->parseDevmagicTag($remainingKeys, $value);
+        } else {
+            $config[$key] = trim($value);
+        }
+        return $config;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
     }
 }

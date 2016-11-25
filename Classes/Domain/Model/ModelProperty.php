@@ -73,12 +73,12 @@ class ModelProperty
     /**
      * @var string
      */
-    protected $tcaColumnType;
+    protected $label;
 
     /**
-     * @var string
+     * @var array
      */
-    protected $label;
+    protected $config = array();
 
     /**
      * @param string $name
@@ -88,24 +88,7 @@ class ModelProperty
         $this->name = $name;
         $this->key = GeneralUtility::camelCaseToLowerCaseUnderscored($name);
 
-        if ($this->reflectionService->isPropertyTaggedWith($this->model->getClassName(), $name, 'devmagic')) {
-            $tags = $this->reflectionService->getPropertyTagValues($this->model->getClassName(), $name, 'devmagic');
-            foreach ($tags as $tag) {
-                list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
-                switch (strtolower($key)) {
-                    case 'tca':
-                        $this->tcaColumnType = strtolower(trim($value));
-                        break;
-                    case 'label':
-                        $this->label = trim($value);
-                        break;
-                }
-            }
-            // label
-            // label_alt
-            // fileType: image, pdf, any
-            // string: text
-        }
+        $this->parseDevmagicTags();
     }
 
     /**
@@ -232,24 +215,21 @@ class ModelProperty
      * @return string
      */
     public function getTcaColumnPartialName() {
-        switch ($this->tcaColumnType ?: $this->type) {
-            case 'text':
-                return 'Text';
-
-            case 'inline':
-                return 'Inline';
-
-            case 'string':
-                return 'String';
-
+        if ($this->config['tca']['config']['type']) {
+            return ucfirst(strtolower(trim($this->config['tca']['config']['type'])));
+        }
+        switch ($this->type) {
             case 'boolean':
-                return 'Checkbox';
-
-            case 'DateTime':
-                return 'DateTime';
+                return 'Check';
 
             case 'TYPO3\CMS\Extbase\Domain\Model\FileReference':
                 return 'File';
+
+            case 'string':
+                return 'Input';
+
+            case 'DateTime':
+                return 'Input_DateTime';
 
             case 'array':
             case 'TYPO3\CMS\Extbase\Persistence\ObjectStorage':
@@ -258,23 +238,22 @@ class ModelProperty
                 }
 
                 if ($this->isRelation() && $this->getRelationModel()->getTableName() == 'sys_category') {
-                    return 'SysCategory';
+                    return 'Select_SysCategory';
                 }
 
-                return 'ManyToMany';
+                return 'Group_Db';
 
             default:
                 if ($this->isRelation()) {
-                    return 'OneToOne';
+                    return 'Select_One';
                 }
-
-                return 'String';
+                return 'Input';
         }
     }
 
     public function getRelationMMTable()
     {
-        if ($this->getTcaColumnPartialName() != 'ManyToMany' && $this->getTcaColumnPartialName() != 'Inline') {
+        if ($this->getTcaColumnPartialName() != 'Group_Db' && $this->getTcaColumnPartialName() != 'Inline') {
             return null;
         }
         list($_, $table1) = GeneralUtility::revExplode('_', $this->model->getTableName(), 2);
@@ -295,16 +274,16 @@ class ModelProperty
             case 'Text':
                 $sql = 'text NOT NULL';
                 break;
-            case 'SysCategory':
-            case 'OneToOne':
-            case 'ManyToMany':
+            case 'Select_SysCategory':
+            case 'Select_One':
+            case 'Group_Db':
             case 'Inline':
             case 'Files':
             case 'File':
-            case 'DateTime':
+            case 'Input_DateTime':
                 $sql = 'int(11) unsigned DEFAULT \'0\' NOT NULL';
                 break;
-            case 'Checkbox':
+            case 'Check':
                 $sql = 'tinyint(1) unsigned DEFAULT \'0\' NOT NULL';
                 break;
             default:
@@ -347,5 +326,39 @@ class ModelProperty
             $this->relationModel = $this->buildService->getModelForClassname($this->elementType ?: $this->type);
         }
         return $this->relationModel;
+    }
+
+    private function parseDevmagicTags()
+    {
+        if ($this->reflectionService->isPropertyTaggedWith($this->model->getClassName(), $this->name, 'devmagic')) {
+            $tags = $this->reflectionService->getPropertyTagValues($this->model->getClassName(), $this->name, 'devmagic');
+            foreach ($tags as $tag) {
+                list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
+                $config = $this->parseDevmagicTag($key, $value);
+
+                $this->config = \TYPO3\CMS\Extbase\Utility\ArrayUtility::arrayMergeRecursiveOverrule($this->config, $config);
+
+            }
+            $this->label = trim($this->config['tca']['label']);
+        }
+    }
+
+    private function parseDevmagicTag($key, $value)
+    {
+        if (strpos($key, '.') !== false) {
+            list($firstKey, $remainingKeys) = GeneralUtility::trimExplode('.', $key, true, 2);
+            $config[$firstKey] = $this->parseDevmagicTag($remainingKeys, $value);
+        } else {
+            $config[$key] = trim($value);
+        }
+        return $config;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig()
+    {
+        return $this->config;
     }
 }

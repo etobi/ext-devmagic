@@ -22,9 +22,11 @@ return array(
                         'starttime' => 'starttime',
                         'endtime' => 'endtime',
                 ),
-                <f:if condition="{file.model.hideTable}">'hideTable' => true,
-                </f:if>'default_sortby' => 'ORDER BY uid',
-                'searchFields' => '{file.model.labelPropertyName}',
+                <f:if condition="{file.model.config.tca.ctrl.hideTable}">
+                    <f:then>'hideTable' => true,</f:then>
+                    <f:else>'searchFields' => '{file.model.labelPropertyName}',</f:else>
+                </f:if>
+                'default_sortby' => 'ORDER BY uid',
                 'iconfile' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('{file.model.extensionKey}') . 'Resources/Public/Icons/{file.model.tableName}.png',
         ),
 
