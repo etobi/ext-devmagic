@@ -5,5 +5,6 @@
                                 'type' => 'text',
                                 'rows' => 5,
                                 'cols' => 50,
-                        )
+                        )<f:if condition="{property.config.tca.defaultExtras}" >,
+                        'defaultExtras' => '{property.config.tca.defaultExtras}'</f:if>
                 ),

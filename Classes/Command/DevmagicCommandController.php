@@ -37,4 +37,8 @@ class DevmagicCommandController extends CommandController
     // TODO buildExtTablesSql
     // TODO buildModelFromYaml
     // TODO buildExtension
+
+    // TODO kickController
+    // TODO kickPlugin
+    // TODO kickRepository
 }
