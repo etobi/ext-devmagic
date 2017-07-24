@@ -333,7 +333,7 @@ class ModelProperty
         if ($this->reflectionService->isPropertyTaggedWith($this->model->getClassName(), $this->name, 'devmagic')) {
             $tags = $this->reflectionService->getPropertyTagValues($this->model->getClassName(), $this->name, 'devmagic');
             foreach ($tags as $tag) {
-                list($key, $value) = GeneralUtility::trimExplode('=', $tag, 2);
+                list($key, $value) = GeneralUtility::trimExplode('=', $tag, false, 2);
                 $config = $this->parseDevmagicTag($key, $value);
 
                 $this->config = \TYPO3\CMS\Extbase\Utility\ArrayUtility::arrayMergeRecursiveOverrule($this->config, $config);
